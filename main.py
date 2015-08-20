@@ -1,20 +1,23 @@
 from multiprocessing import Pool
+import random
+import time
+import sys
+
 PROCESSES_NB = None # The number of processes will be the number of cores available on the system
+TASKS_NBR = 100 #Number of tasks to allocate to the cores
+TASK_CPTIME_MIN =1 # Minimum time to compute a task 
+TASK_CPTIME_MAX =100 # Miaximum time to compute a task 
 
-def f(x):
-     return x*x
+random.seed() # Generates a seed for the random generator
 
+def tasks_generator(nbr):
+	for i in xrange(nbr):
+		yield {'name':"Task" + str(i+1), 'duration':random.randint(TASK_CPTIME_MIN,TASK_CPTIME_MAX)}
 
 if __name__ == '__main__':
      pool=Pool(processes=PROCESSES_NB)
 
-     result = pool.apply_async(f, (10,))    # evaluate "f(10)" asynchronously
-     print result.get(timeout=1)           # prints "100" unless your computer is *very* slow
+     for task in tasks_generator(TASKS_NBR):
+     	print task['name'],task['duration']
 
-     print pool.map(f, range(10))          # prints "[0, 1, 4,..., 81]"
 
-     it = pool.imap(f, range(10))
-     print it.next()                       # prints "0"
-     print it.next()                       # prints "1"
-     print it.next(timeout=1)              # prints "4" unless your computer is *very* slow
-     
