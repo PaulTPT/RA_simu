@@ -1,7 +1,9 @@
 from os import path
 from os import mkdir
+import random
+import sys
 
-TASKS_NBR = 1000 # Number of tasks to allocate to the cores
+TASKS_NBR = 100 # Number of tasks to allocate to the cores
 TASK_CPTIME_MIN =1 # Minimum time to compute a task 
 TASK_CPTIME_MAX =100 # Miaximum time to compute a task
 DELAY_MIN =1 # Minimum delay
@@ -63,7 +65,7 @@ def load_tasks(config_name,NUM_CPU):
 	except IOError:
 		print ('Config does not exists. Generating it...'+'\n')	
 		generate_config(config_name,NUM_CPU)
-		return load_tasks_config(config_name,NUM_CPU)
+		return load_tasks(config_name,NUM_CPU)
 		
 	return parse_tasks_config(tasks_data)
 

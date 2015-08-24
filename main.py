@@ -3,6 +3,7 @@ import random
 import time
 import sys
 import config_manager
+import allocation_algorithms
 
 random.seed() # Generates a seed for the random generator
 
@@ -21,12 +22,7 @@ def tasks_handler(queue,process_nb,lock):
 # The function allocating tasks to the queues of the different cores
 def tasks_allocator(tasks,queues):
 		# Implement your ressource allocation algorithm here
-		#
-		# Exemple: Random allocation
-		num_process=len(queues)-1
-	   	for task in tasks:
-	   		pr_num=random.randint(0,num_process-1)
-	   		queues[pr_num].put(task)
+		allocation_algorithms.random_algo(tasks,queues)
 
 
 if __name__ == '__main__':
