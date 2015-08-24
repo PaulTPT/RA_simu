@@ -1,20 +1,11 @@
 from multiprocessing import cpu_count, Queue, Process, Lock
-import random
 import time
 import sys
+# import numpy
+import config_manager
 
 PROCESSES_NB = None # The number of processes will be the number of cores available on the system
-TASKS_NBR = 1000 # Number of tasks to allocate to the cores
-TASK_CPTIME_MIN =1 # Minimum time to compute a task 
-TASK_CPTIME_MAX =100 # Miaximum time to compute a task 
 NUM_CPU = cpu_count() # The number of CPUs available on the machine
-
-random.seed() # Generates a seed for the random generator
-
-# Generator generating n tasks with a random execution time
-def tasks_generator(nbr):
-	for i in xrange(nbr):
-		yield {'name':"Task" + str(i+1), 'duration':random.randint(TASK_CPTIME_MIN,TASK_CPTIME_MAX)}
 
 # The code running on each core
 def tasks_handler(queue,process_nb,lock):
@@ -42,27 +33,37 @@ if __name__ == '__main__':
    	process_list=[]
    	queues_list=[]
 
-   	# Initialisation of the processes and their queues
-   	for i in range(0,NUM_CPU) :
-   		queue=Queue()
-   		queues_list.append(queue)
-   		process=Process(target=tasks_handler,args=(queue,i,lock))
-   		process_list.append(process)
 
-   	startTime=time.time()
+   	if len(sys.argv)==2:
+   		pass
+	elif len(sys.argv)==1:
+		config_name=raw_input("Give a name to the new config:\n")
+		config_manager.generate_config(config_name, NUM_CPU)
+	else:
+		print "Please enter the folder containing the config you weant to use or no argument if you want to generate a new one."
+		sys.exit()
 
-   	tasks=tasks_generator(TASKS_NBR)
-   	tasks_allocator(tasks,queues_list)
+ #   	# Initialisation of the processes and their queues
+ #   	for i in range(0,NUM_CPU) :
+ #   		queue=Queue()
+ #   		queues_list.append(queue)
+ #   		process=Process(target=tasks_handler,args=(queue,i,lock))
+ #   		process_list.append(process)
 
-   	for process in process_list:
-   		process.start()
+ #   	startTime=time.time()
 
-	for process in process_list:
-		process.join()
+ #   	tasks=tasks_generator(TASKS_NBR)
+ #   	tasks_allocator(tasks,queues_list)
 
-   	endTime=time.time()
+ #   	for process in process_list:
+ #   		process.start()
 
-	#calculate the total time it took to complete the work
-	workTime =  endTime - startTime
+	# for process in process_list:
+	# 	process.join()
 
-	print "The jobs took " + str(workTime) + " seconds to complete"
+ #   	endTime=time.time()
+
+	# #calculate the total time it took to complete the work
+	# workTime =  endTime - startTime
+
+	# print "The jobs took " + str(workTime) + " seconds to complete"
