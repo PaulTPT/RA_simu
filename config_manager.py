@@ -8,6 +8,7 @@ TASK_CPTIME_MIN =1 # Minimum time to compute a task
 TASK_CPTIME_MAX =100 # Miaximum time to compute a task
 DELAY_MIN =1 # Minimum delay
 DELAY_MAX =10 # Miaximum delay
+MAX_DEPENDANCY =5 # Miaximum dependancy
 
 def generate_config (config_name, NUM_CPU):
 	config_path="configs/"+str(config_name)
@@ -21,7 +22,10 @@ def generate_config (config_name, NUM_CPU):
 	tasks_data=open(file_path_tasks,'w')
 
 	for task in tasks_generator(TASKS_NBR):
-		tasks_data.write(task['name']+' '+str(task['duration'])+'\n')
+		tasks_data.write(task['name']+' '+str(task['duration'])+' ')
+		for dependancy in task['dependancies']:
+			tasks_data.write(dependancy+' ')
+		tasks_data.write('\n')
 
 	tasks_data.close()
 
@@ -43,7 +47,13 @@ def generate_config (config_name, NUM_CPU):
 # Generator generating nbr tasks with a random execution time
 def tasks_generator(nbr):
 	for i in xrange(nbr):
-		yield {'name':"Task" + str(i+1), 'duration': random.randint(TASK_CPTIME_MIN,TASK_CPTIME_MAX)}
+		tasks_dependancy=[]
+		for j in xrange(random.randint(0,MAX_DEPENDANCY)):
+			task_nbr=random.randint(0,nbr-1)
+			while task_nbr==i:
+				task_nbr=random.randint(0,nbr-1)
+			tasks_dependancy.append('Task'+str(task_nbr+1))
+		yield {'name':"Task" + str(i+1), 'duration': random.randint(TASK_CPTIME_MIN,TASK_CPTIME_MAX), 'dependancies':tasks_dependancy}
 
 
 # Generator generating the communication delays between the different CPU (blades)
@@ -56,7 +66,7 @@ def net_delay_generator(nbr_cpu):
 		yield delays
 	
 
-# Returns a generator of the tasks
+# Returns a list of the tasks
 def load_tasks(config_name,NUM_CPU):
 	config_path="configs/"+str(config_name)
 	file_path_tasks= path.relpath(config_path+"/tasks.cfg")
@@ -71,12 +81,12 @@ def load_tasks(config_name,NUM_CPU):
 	return parse_tasks_config(tasks_data)
 
 def parse_tasks_config(tasks_data):
-	try:
-		for line in tasks_data:
-			line_words=line.split()
-			yield {'name': line_words[0], 'duration': int(line_words[1])}
-	finally:
-		tasks_data.close()
+	tasks=[]
+	for line in tasks_data:
+		line_words=line.split()
+		tasks.append({'name': line_words[0], 'duration': int(line_words[1]), 'dependancies': line_words[2:]})
+	tasks_data.close()
+	return tasks
 
 # Returns a generator of the delays for each blade to the other blades
 def load_delays(config_name):

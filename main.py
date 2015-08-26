@@ -1,4 +1,4 @@
-from multiprocessing import cpu_count, Queue, Lock
+from multiprocessing import cpu_count, Queue, Lock, current_process
 from Blade_Process import Process_delays as Process
 import random
 import time
@@ -12,16 +12,24 @@ PROCESSES_NB = None # The number of processes will be the number of cores availa
 NUM_CPU = cpu_count() # The number of CPUs available on the machine
 
 # The code running on each core
-def tasks_handler(queue,process_nb,lock):
+def tasks_handler(tasks,queue,lock):
+	process=current_process()
 	while not queue.empty():
 		task=queue.get() # We get on the queue one of the tasks allocated by the tasks allocator 
-		lock.acquire()
-		# print 'Executing task ' + task['name'] + ' on process ' + str(process_nb)
-		lock.release()
+		# lock.acquire()
+		# print 'Executing task ' + task['name'] + ' on process ' + str(process.get_id())
+		# lock.release()
 		time.sleep(task['duration']/1000.0) # Simulation of the execution time
+		for dependancy in task['dependancies']:
+			dependancy_process=next(task['process'] for task in tasks if task['name']== dependancy)
+			process_delay=process.get_delays()[dependancy_process]
+			time.sleep(process_delay/1000.0)
+			# lock.acquire()
+			# print 'Sleeping '+ str(process_delay) +' ms waiting for transfer from process '+ str(dependancy_process) + '\n'
+			# lock.release()
 
 # The function allocating tasks to the queues of the different cores
-def tasks_allocator(tasks,queues):
+def tasks_allocator(tasks,queues,process_list):
 		# Implement your ressource allocation algorithm here
 		allocation_algorithms.random_algo(tasks,queues)
 
@@ -44,17 +52,17 @@ if __name__ == '__main__':
 		sys.exit()
 
 
+   	tasks=config_manager.load_tasks(config_name,NUM_CPU)
+
    	# Initialisation of the processes and their queues
    	for i in range(0,NUM_CPU) :
    		queue=Queue()
    		queues_list.append(queue)
-   		process=Process(target=tasks_handler,args=(queue,i,lock))
+   		process=Process(i,target=tasks_handler,args=(tasks,queue,lock))
    		process_list.append(process)
 
    	startTime=time.time()
-
-   	tasks=config_manager.load_tasks(config_name,NUM_CPU)
-   	tasks_allocator(tasks,queues_list)
+   	tasks_allocator(tasks,queues_list,process_list)
 
    	delays=config_manager.load_delays(config_name)
 
