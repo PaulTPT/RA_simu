@@ -12,6 +12,6 @@ def roundRobin_algo(tasks,queues):
 	i=0
 	for task in tasks:
 		pr_num=i%4
-		++i
+		i+=1
 		queues[pr_num].put(task)
 		task['process']=pr_num
