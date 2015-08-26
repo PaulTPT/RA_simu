@@ -31,7 +31,7 @@ def tasks_handler(tasks,queue,lock):
 # The function allocating tasks to the queues of the different cores
 def tasks_allocator(tasks,queues,process_list):
 		# Implement your ressource allocation algorithm here
-		allocation_algorithms.random_algo(tasks,queues)
+		allocation_algorithms.roundRobin_algo(tasks,queues)
 
 
 if __name__ == '__main__':
