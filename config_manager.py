@@ -56,6 +56,7 @@ def net_delay_generator(nbr_cpu):
 		yield delays
 	
 
+# Returns a generator of the tasks
 def load_tasks(config_name,NUM_CPU):
 	config_path="configs/"+str(config_name)
 	file_path_tasks= path.relpath(config_path+"/tasks.cfg")
@@ -77,9 +78,26 @@ def parse_tasks_config(tasks_data):
 	finally:
 		tasks_data.close()
 
+# Returns a generator of the delays for each blade to the other blades
+def load_delays(config_name):
+	config_path="configs/"+str(config_name)
+	file_path_delays= path.relpath(config_path+"/delays.cfg")
+
+	try:
+		delays_data=open(file_path_delays,'r')
+	except IOError:
+		print ('Config does not exists. Generating it...'+'\n')	
+		generate_config(config_name,NUM_CPU)
+		return load_delays(config_name,NUM_CPU)
+		
+	return parse_delays_config(delays_data)	
 
 
-
-
-
+def parse_delays_config(delays_data):
+	try:
+		for line in delays_data:
+			line_words=line.split()
+			yield [int(word) for word in line_words]
+	finally:
+		delays_data.close()
 

@@ -1,4 +1,5 @@
-from multiprocessing import cpu_count, Queue, Process, Lock
+from multiprocessing import cpu_count, Queue, Lock
+from Blade_Process import Process_delays as Process
 import random
 import time
 import sys
@@ -52,16 +53,18 @@ if __name__ == '__main__':
 
    	startTime=time.time()
 
-   	# tasks=tasks_generator(TASKS_NBR)
    	tasks=config_manager.load_tasks(config_name,NUM_CPU)
    	tasks_allocator(tasks,queues_list)
 
+   	delays=config_manager.load_delays(config_name)
+
    	for process in process_list:
+   		process.set_delays(delays.next())
    		process.start()
 
 	for process in process_list:
-		process.join()
-
+		process.join(
+)
    	endTime=time.time()
 
 	#calculate the total time it took to complete the work
