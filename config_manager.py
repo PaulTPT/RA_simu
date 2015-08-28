@@ -5,7 +5,7 @@ import sys
 
 TASKS_NBR = 100 # Number of tasks to allocate to the cores
 TASK_CPTIME_MIN =1 # Minimum time to compute a task 
-TASK_CPTIME_MAX =100 # Miaximum time to compute a task
+TASK_CPTIME_MAX =1000 # Miaximum time to compute a task
 DELAY_MIN =1 # Minimum delay
 DELAY_MAX =10 # Miaximum delay
 MAX_DEPENDANCY =5 # Miaximum dependancy
@@ -84,7 +84,7 @@ def parse_tasks_config(tasks_data):
 	tasks=[]
 	for line in tasks_data:
 		line_words=line.split()
-		tasks.append({'name': line_words[0], 'duration': int(line_words[1]), 'dependancies': line_words[2:]})
+		tasks.append({'name': line_words[0], 'duration': int(line_words[1]), 'dependancies': line_words[2:], 'process':None})
 	tasks_data.close()
 	return tasks
 

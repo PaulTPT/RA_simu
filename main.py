@@ -30,8 +30,20 @@ def tasks_handler(tasks,queue,lock):
 
 # The function allocating tasks to the queues of the different cores
 def tasks_allocator(tasks,queues,process_list):
-		# Implement your ressource allocation algorithm here
-		allocation_algorithms.roundRobin_algo(tasks,queues)
+		startTimeTA=time.time()
+
+		# Put your ressource allocation algorithm here
+		
+		allocation_algorithms.maxMin_algo(tasks,queues,process_list)
+		# allocation_algorithms.random_algo(tasks,queues)
+		# allocation_algorithms.roundRobin_algo(tasks,queues)
+
+
+		endTimeTA=time.time()
+
+		#calculate the total time it took to allocate the tasks
+		TATime =  endTimeTA - startTimeTA
+		print 'The task allocation took ' +str(TATime) + " seconds to complete\n"
 
 
 if __name__ == '__main__':
@@ -61,23 +73,27 @@ if __name__ == '__main__':
    		process=Process(i,target=tasks_handler,args=(tasks,queue,lock))
    		process_list.append(process)
 
-   	startTime=time.time()
-   	tasks_allocator(tasks,queues_list,process_list)
-
    	delays=config_manager.load_delays(config_name)
 
+	for process in process_list:
+		process.set_delays(delays.next())
+   	
+   	tasks_allocator(tasks,queues_list,process_list)
+
+
+   	startTime=time.time()
+
    	for process in process_list:
-   		process.set_delays(delays.next())
    		process.start()
 
 	for process in process_list:
-		process.join(
-)
+		process.join()
+
    	endTime=time.time()
 
 	#calculate the total time it took to complete the work
 	workTime =  endTime - startTime
 
-	print "The jobs took " + str(workTime) + " seconds to complete"
+	print "The jobs took " + str(workTime) + " seconds to complete\n"
 
 
