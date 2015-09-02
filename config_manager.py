@@ -3,9 +3,10 @@ from os import mkdir
 import random
 import sys
 
-TASKS_NBR = 100 # Number of tasks to allocate to the cores
+BOT_NBR =10
+TASKS_NBR = 100 # Number of tasks per bag of tasks
 TASK_CPTIME_MIN =1 # Minimum time to compute a task 
-TASK_CPTIME_MAX =1000 # Miaximum time to compute a task
+TASK_CPTIME_MAX =100 # Miaximum time to compute a task
 DELAY_MIN =1 # Minimum delay
 DELAY_MAX =10 # Miaximum delay
 MAX_DEPENDANCY =5 # Miaximum dependancy
@@ -21,10 +22,13 @@ def generate_config (config_name, NUM_CPU):
 	file_path_tasks= path.relpath(config_path+"/tasks.cfg")
 	tasks_data=open(file_path_tasks,'w')
 
-	for task in tasks_generator(TASKS_NBR):
-		tasks_data.write(task['name']+' '+str(task['duration'])+' ')
-		for dependancy in task['dependancies']:
-			tasks_data.write(dependancy+' ')
+	for i in xrange(BOT_NBR):
+
+		for task in tasks_generator(TASKS_NBR,i):
+			tasks_data.write(task['name']+' '+str(task['duration'])+' ')
+			for dependancy in task['dependancies']:
+				tasks_data.write(dependancy+' ')
+			tasks_data.write('\n')
 		tasks_data.write('\n')
 
 	tasks_data.close()
@@ -45,13 +49,25 @@ def generate_config (config_name, NUM_CPU):
 
 
 # Generator generating nbr tasks with a random execution time
-def tasks_generator(nbr):
+def tasks_generator(nbr,bag_num):
 	for i in xrange(nbr):
 		tasks_dependancy=[]
-		for j in xrange(random.randint(0,MAX_DEPENDANCY)):
-			task_nbr=random.randint(0,nbr-1)
-			while task_nbr==i:
+		if bag_num != 0:
+			for j in xrange(random.randint(0,MAX_DEPENDANCY)):
 				task_nbr=random.randint(0,nbr-1)
+				tasks_dependancy.append('Task'+str(bag_num-1) + str(task_nbr+1))
+		yield {'name':"Task" + str(bag_num) + str(i+1), 'duration': random.randint(TASK_CPTIME_MIN,TASK_CPTIME_MAX), 'dependancies':tasks_dependancy}
+
+
+
+# Generator generating nbr tasks with a random execution time
+def tasks_generator_dependancy(nbr):
+	for i in xrange(nbr):
+		tasks_dependancy=[]
+		for j in xrange(random.randint(0,min(MAX_DEPENDANCY,i/2))): 
+			task_nbr=random.randint(0,i)
+			while task_nbr==i:
+				task_nbr=random.randint(0,i)
 			tasks_dependancy.append('Task'+str(task_nbr+1))
 		yield {'name':"Task" + str(i+1), 'duration': random.randint(TASK_CPTIME_MIN,TASK_CPTIME_MAX), 'dependancies':tasks_dependancy}
 
@@ -66,7 +82,7 @@ def net_delay_generator(nbr_cpu):
 		yield delays
 	
 
-# Returns a list of the tasks
+# Returns a list of the bag of tasks tasks
 def load_tasks(config_name,NUM_CPU):
 	config_path="configs/"+str(config_name)
 	file_path_tasks= path.relpath(config_path+"/tasks.cfg")
@@ -82,11 +98,16 @@ def load_tasks(config_name,NUM_CPU):
 
 def parse_tasks_config(tasks_data):
 	tasks=[]
+	BOT=[]
 	for line in tasks_data:
-		line_words=line.split()
-		tasks.append({'name': line_words[0], 'duration': int(line_words[1]), 'dependancies': line_words[2:], 'process':None})
+		if line =='\n':
+			BOT.append(tasks)
+			tasks=[]
+		else :
+			line_words=line.split()
+			tasks.append({'name': line_words[0], 'duration': int(line_words[1]), 'dependancies': line_words[2:], 'process':None})
 	tasks_data.close()
-	return tasks
+	return BOT
 
 # Returns a generator of the delays for each blade to the other blades
 def load_delays(config_name):
@@ -103,6 +124,7 @@ def load_delays(config_name):
 	return parse_delays_config(delays_data)	
 
 
+# Generator which returns the task dependancies
 def parse_delays_config(delays_data):
 	try:
 		for line in delays_data:
